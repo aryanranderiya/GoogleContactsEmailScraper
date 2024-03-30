@@ -16,13 +16,13 @@
 1. Clone the Repository
 
    ```
-   git clone https://github.com/yourusername/your-repo.git
+   git clone https://github.com/aryanranderiya/GoogleContactsEmailScraper.git
    ```
 
 2. Navigate to the project directory:
 
    ```
-   cd GoogleContactsExporter
+   cd GoogleContactsEmailScraper
    ```
 
 3. Install Dependencies
