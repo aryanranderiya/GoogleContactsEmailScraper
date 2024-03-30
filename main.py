@@ -13,9 +13,22 @@ SCOPES = ["https://www.googleapis.com/auth/contacts.readonly",
 data: list = []
 
 
+def wrap_error(func):
+    """
+    Used to ensure other function execution doesnt stop due to occurence of an exception
+    Thanks a lot: https://stackoverflow.com/a/40102885/21615084
+    """
+    def func_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(e)
+    return func_wrapper
+
+
 def authenticate() -> None:
     """
-    Authenticate user using Google Auth 2.0
+    Authenticate user using Google OAuth
     """
 
     creds = None
@@ -40,25 +53,20 @@ def authenticate() -> None:
         with open("token.json", "w") as token:
             token.write(creds.to_json())
 
+    if creds.valid:
+        print("User authenticated")
+
     try:
         service = build("people", "v1", credentials=creds)
-        print("User Authenticated!")
 
-        try:
-            fetch_directory_contacts(service)
-        except Exception as e:
-            print("Failed to fetch directory contacts:", e)
+        fetch_contacts(service)
+        fetch_directory_contacts(service)
 
     except Exception as err:
-        print("Error:", err)
-
-    finally:
-        try:
-            fetch_contacts(service)
-        except Exception as e:
-            print("Failed to fetch contacts:", e)
+        print("Error: ", err)
 
 
+@wrap_error
 def fetch_contacts(service):
 
     finished: bool = False
@@ -66,7 +74,7 @@ def fetch_contacts(service):
     data: set = set()
     count: int = 0
 
-    print("Fetching Contacts...")
+    print("Fetching Contacts...", end="\r")
 
     while not finished:
 
@@ -80,9 +88,6 @@ def fetch_contacts(service):
 
         count += len(connections)  # Increment the count of records fetched
         print(f"Fetching Contacts {count}...", end='\r')
-
-        # If no more results then exit the while loop
-        finished = not connections
 
         for person in connections:
             # Store email addresses (if multiple) in a list after fetching from dict
@@ -102,6 +107,7 @@ def fetch_contacts(service):
     write_contacts_file(data)
 
 
+@wrap_error
 def fetch_directory_contacts(service) -> None:
     """
     Fetch all the contacts from Directory
@@ -111,7 +117,7 @@ def fetch_directory_contacts(service) -> None:
     data: set = set()
     count: int = 0
 
-    print("Fetching Directory Contacts...")
+    print("Fetching Directory Contacts...", end='\r')
 
     while not finished:
 
@@ -127,9 +133,6 @@ def fetch_directory_contacts(service) -> None:
 
         count += len(result)  # Increment the count of records fetched
         print(f"Fetching Directory Contacts {count}...", end='\r')
-
-        # If no more results then exit the while loop
-        finished = not result
 
         for person in result:
             # Store email addresses (if multiple) in a list after fetching from dict
@@ -153,12 +156,17 @@ def perform_write(list: list, filename: str) -> None:
     """
     Write the contents of a list to the specified filename
     """
-    with open(filename, "w") as file:
-        for i, data in enumerate(list):
-            print(f"Progress (Writing to File): {i}/{len(list)}", end='\r')
-            file.write(data + "\n")
 
-    print(f"{filename} Successfully Written!")
+    if list:
+        with open(filename, "w") as file:
+            for i, data in enumerate(list):
+                print(f"Progress (Writing to File): {i}/{len(list)}", end='\r')
+                file.write(data + "\n")
+
+        print(f"{filename} Successfully Written!")
+
+    else:
+        print(f"{list} is Empty! No Records found!")
 
 
 def write_contacts_file(data_set: set) -> None:
@@ -176,6 +184,11 @@ def write_directory_file(data_set: set) -> None:
     File 1 (directory_emails_alphabetic.txt) contains emails sorted by their name.
     File 2 (directory_emails_domain.txt) contains emails sorted by the domain
     """
+
+    if not data_set:
+        print("No Directory Exists!")
+        return
+
     data: list = sorted(data_set)
     data_sortby_domain: list = sorted(data_set, key=domain)
 
