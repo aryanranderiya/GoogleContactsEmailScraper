@@ -1,4 +1,3 @@
-from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
@@ -152,7 +151,7 @@ def fetch_directory_contacts(service) -> None:
     write_directory_file(data)
 
 
-def perform_write(list: list, filename: str) -> None:
+def perform_write(list: list, filename: str, contact_type: str) -> None:
     """
     Write the contents of a list to the specified filename
     """
@@ -166,7 +165,7 @@ def perform_write(list: list, filename: str) -> None:
         print(f"{filename} Successfully Written!")
 
     else:
-        print(f"{list} is Empty! No Records found!")
+        print(f"{contact_type} is Empty! No Records found!")
 
 
 def write_contacts_file(data_set: set) -> None:
@@ -175,7 +174,7 @@ def write_contacts_file(data_set: set) -> None:
     data: list = sorted(data_set)
 
     threading.Thread(target=perform_write, args=(
-        data, "contacts_emails.txt")).start()
+        data, "contacts_emails.txt", "Personal Contacts")).start()
 
 
 def write_directory_file(data_set: set) -> None:
@@ -193,10 +192,10 @@ def write_directory_file(data_set: set) -> None:
     data_sortby_domain: list = sorted(data_set, key=domain)
 
     thread1 = threading.Thread(target=perform_write, args=(
-        data, "directory_emails_alphabetic.txt"))
+        data, "directory_emails_alphabetic.txt", "Directory Contacts"))
 
     thread2 = threading.Thread(target=perform_write, args=(
-        data_sortby_domain, "directory_emails_domain.txt"))
+        data_sortby_domain, "directory_emails_domain.txt", "Directory Contacts"))
 
     thread1.start()
     thread2.start()
