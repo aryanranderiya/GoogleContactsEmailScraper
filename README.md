@@ -5,6 +5,12 @@
 - Google Contacts does not have a native Bulk Contact Export feature that exports all contacts at once. This provides a way to do so.
 - You can customise this script to store names, phone numbers and more. [Read more.](https://developers.google.com/people/api)
 
+## Screenshots
+
+![2024-03-30_22-39](https://github.com/aryanranderiya/GoogleContactsEmailScraper/assets/64796509/47620478-0ecf-46d8-840b-9a196086458b)
+![2024-03-30_22-41](https://github.com/aryanranderiya/GoogleContactsEmailScraper/assets/64796509/521b1fff-fdf7-491b-859e-2a2f598d2cb6)
+
+
 ## Installation
 
 1. Clone the Repository
