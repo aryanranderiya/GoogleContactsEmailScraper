@@ -43,26 +43,75 @@ def authenticate() -> None:
     try:
         service = build("people", "v1", credentials=creds)
         print("User Authenticated!")
-        fetch_directory_contacts(service)
 
-    except HttpError as err:
-        print(err)
+        try:
+            fetch_directory_contacts(service)
+        except Exception as e:
+            print("Failed to fetch directory contacts:", e)
+
+    except Exception as err:
+        print("Error:", err)
+
+    finally:
+        try:
+            fetch_contacts(service)
+        except Exception as e:
+            print("Failed to fetch contacts:", e)
 
 
-def fetch_contacts():
-    ...
+def fetch_contacts(service):
 
-
-def fetch_directory_contacts(service) -> None:
-    """
-    Fetch all the contacts
-    """
     finished: bool = False
     next_page_token: str = None
     data: set = set()
     count: int = 0
 
     print("Fetching Contacts...")
+
+    while not finished:
+
+        results = service.people().connections().list(
+            resourceName='people/me',
+            personFields='names,emailAddresses',
+            pageSize=1000,
+        ).execute()
+
+        connections = results.get("connections", [])
+
+        count += len(connections)  # Increment the count of records fetched
+        print(f"Fetching Contacts {count}...", end='\r')
+
+        # If no more results then exit the while loop
+        finished = not connections
+
+        for person in connections:
+            # Store email addresses (if multiple) in a list after fetching from dict
+            emailAddresses: list = person.get("emailAddresses", [])
+
+            # Check if the value exists
+            if emailAddresses:
+                for email in emailAddresses:  # Iterate over lists
+                    data.add(email['value'].strip())
+
+        # Fetch the next page of results (1k)
+        next_page_token = results.get('nextPageToken')
+
+        # If no more results then exit the while loop
+        finished = not next_page_token
+
+    write_contacts_file(data)
+
+
+def fetch_directory_contacts(service) -> None:
+    """
+    Fetch all the contacts from Directory
+    """
+    finished: bool = False
+    next_page_token: str = None
+    data: set = set()
+    count: int = 0
+
+    print("Fetching Directory Contacts...")
 
     while not finished:
 
@@ -77,7 +126,7 @@ def fetch_directory_contacts(service) -> None:
         result = results.get('people', [])
 
         count += len(result)  # Increment the count of records fetched
-        print(f"Fetching Contacts {count}...", end='\r')
+        print(f"Fetching Directory Contacts {count}...", end='\r')
 
         # If no more results then exit the while loop
         finished = not result
@@ -97,7 +146,7 @@ def fetch_directory_contacts(service) -> None:
         # If no more results then exit the while loop
         finished = not next_page_token
 
-    write_to_file(data)
+    write_directory_file(data)
 
 
 def perform_write(list: list, filename: str) -> None:
@@ -109,8 +158,19 @@ def perform_write(list: list, filename: str) -> None:
             print(f"Progress (Writing to File): {i}/{len(list)}", end='\r')
             file.write(data + "\n")
 
+    print(f"{filename} Successfully Written!")
 
-def write_to_file(data_set: set) -> None:
+
+def write_contacts_file(data_set: set) -> None:
+    """
+    """
+    data: list = sorted(data_set)
+
+    threading.Thread(target=perform_write, args=(
+        data, "contacts_emails.txt")).start()
+
+
+def write_directory_file(data_set: set) -> None:
     """
     Create 2 threads to write to 2 files.
     File 1 (directory_emails_alphabetic.txt) contains emails sorted by their name.
