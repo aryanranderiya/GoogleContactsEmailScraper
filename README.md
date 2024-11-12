@@ -1,3 +1,6 @@
+> ### **If you find this Repository helpful or interesting, please consider giving it a star! ⭐️**
+<br/>
+
 # Google Contacts Email Scraper
 
 - Use the Google People's (Contacts) API to fetch email addresses from a large contacts directory and from personal contacts & write them to txt files.
