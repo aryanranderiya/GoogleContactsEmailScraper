@@ -4,6 +4,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import os.path
 import threading
+import time
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/contacts.readonly",
@@ -102,6 +103,7 @@ def fetch_contacts(service):
 
         # If no more results then exit the while loop
         finished = not next_page_token
+        time.sleep(1)
 
     write_contacts_file(data)
 
@@ -147,6 +149,7 @@ def fetch_directory_contacts(service) -> None:
 
         # If no more results then exit the while loop
         finished = not next_page_token
+        time.sleep(1)
 
     write_directory_file(data)
 
